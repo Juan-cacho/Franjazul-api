@@ -8,7 +8,7 @@ public class Rolles {
 
     @Id
     @Column(name = "ID_ROL")
-    private int idRol;
+    private Integer idRol;
 
     @Column(name = "NOMBRE_ROL", nullable = false, length = 20)
     private String nombreRol;
@@ -22,7 +22,7 @@ public class Rolles {
     }
 
     // Constructor con parámetros
-    public Rolles(int idRol, String nombreRol, String descripcionRol) {
+    public Rolles(Integer idRol, String nombreRol, String descripcionRol) {
         this.idRol = idRol;
         this.nombreRol = nombreRol;
         this.descripcionRol = descripcionRol;
@@ -30,11 +30,11 @@ public class Rolles {
     }
 
     // Getters y Setters
-    public int getIdRol() {
+    public Integer getIdRol() {
         return idRol;
     }
 
-    public void setIdRol(int idRol) {
+    public void setIdRol(Integer idRol) {
         this.idRol = idRol;
     }
 

@@ -1,7 +1,7 @@
 package com.franjazul.api.controller;
 
-import com.franjazul.api.model.Cargos;
-import com.franjazul.api.services.CargosService;
+import com.franjazul.api.model.EstadoCita;
+import com.franjazul.api.services.EstadoCitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,67 +13,66 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/cargos")
+@RequestMapping("/api/estados-cita")
 @CrossOrigin(origins = "http://localhost:4200")
-public class CargosController {
-
+public class EstadoCitaController {
 
     @Autowired
-    private CargosService cargosService;
+    private EstadoCitaService estadoCitaService;
 
-    // GET /api/cargos - Obtener todos los cargos
+    // GET /api/estados-cita - Obtener todos los estados de cita
     @GetMapping
     public ResponseEntity<Map<String, Object>> doGet() {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            List<Cargos> cargos = cargosService.obtenerTodos();
+            List<EstadoCita> estadosCita = estadoCitaService.obtenerTodos();
             response.put("success", true);
-            response.put("data", cargos);
-            response.put("message", "cargos obtenidos exitosamente");
+            response.put("data", estadosCita);
+            response.put("message", "Estados de cita obtenidos exitosamente");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al obtener Cargos: " + e.getMessage());
+            response.put("message", "Error al obtener estados de cita: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    //Obtener un cargo por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doGet(@PathVariable String id) {
+    // GET /api/estados-cita/{nombreEc} - Obtener un estado de cita por nombre
+    @GetMapping("/{nombreEc}")
+    public ResponseEntity<Map<String, Object>> doGet(@PathVariable String nombreEc) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Optional<Cargos> cargoOptional = cargosService.obtenerPorId(id);
+            Optional<EstadoCita> estadoCitaOptional = estadoCitaService.obtenerPorId(nombreEc);
 
-            if (cargoOptional.isPresent()) {
+            if (estadoCitaOptional.isPresent()) {
                 response.put("success", true);
-                response.put("data", cargoOptional.get());
-                response.put("message", "Cargo encontrado");
+                response.put("data", estadoCitaOptional.get());
+                response.put("message", "Estado de cita encontrado");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "Cargo no encontrado con ID: " + id);
+                response.put("message", "Estado de cita no encontrado con nombre: " + nombreEc);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al obtener control: " + e.getMessage());
+            response.put("message", "Error al obtener estado de cita: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // POST /api/cargos - Crear un nuevo cargo
+    // POST /api/estados-cita - Crear un nuevo estado de cita
     @PostMapping
-    public ResponseEntity<Map<String, Object>> doPost(@RequestBody Cargos cargo) {
+    public ResponseEntity<Map<String, Object>> doPost(@RequestBody EstadoCita estadoCita) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Cargos nuevoCargo = cargosService.crear(cargo);
+            EstadoCita nuevoEstadoCita = estadoCitaService.crear(estadoCita);
             response.put("success", true);
-            response.put("data", nuevoCargo);
-            response.put("message", "Cargo creado exitosamente");
+            response.put("data", nuevoEstadoCita);
+            response.put("message", "Estado de cita creado exitosamente");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -81,21 +80,21 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al crear cargo: " + e.getMessage());
+            response.put("message", "Error al crear estado de cita: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // PATCH /api/cargos/{id} - Actualizar un cargo
-    @PatchMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doPatch(@PathVariable String id, @RequestBody Cargos cargo) {
+    // PATCH /api/estados-cita/{nombreEc} - Actualizar un estado de cita
+    @PatchMapping("/{nombreEc}")
+    public ResponseEntity<Map<String, Object>> doPatch(@PathVariable String nombreEc, @RequestBody EstadoCita estadoCita) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Cargos cargoActualizado = cargosService.actualizar(id, cargo);
+            EstadoCita estadoCitaActualizado = estadoCitaService.actualizar(nombreEc, estadoCita);
             response.put("success", true);
-            response.put("data", cargoActualizado);
-            response.put("message", "Cargo actualizado exitosamente");
+            response.put("data", estadoCitaActualizado);
+            response.put("message", "Estado de cita actualizado exitosamente");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -103,26 +102,26 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al actualizar el cargo: " + e.getMessage());
+            response.put("message", "Error al actualizar estado de cita: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // DELETE /api/roles/{id} - Borrado lógico de un cargo
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doDelete(@PathVariable String id) {
+    // DELETE /api/estados-cita/{nombreEc} - Borrado físico de un estado de cita
+    @DeleteMapping("/{nombreEc}")
+    public ResponseEntity<Map<String, Object>> doDelete(@PathVariable String nombreEc) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            boolean eliminado = cargosService.borrar(id);
+            boolean eliminado = estadoCitaService.borrar(nombreEc);
 
             if (eliminado) {
                 response.put("success", true);
-                response.put("message", "El cargo fue eliminado correctamente");
+                response.put("message", "Estado de cita eliminado correctamente");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "No se pudo eliminar el cargo");
+                response.put("message", "No se pudo eliminar el estado de cita");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } catch (RuntimeException e) {
@@ -131,7 +130,7 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al eliminar el cargo: " + e.getMessage());
+            response.put("message", "Error al eliminar estado de cita: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

@@ -1,7 +1,7 @@
 package com.franjazul.api.controller;
 
-import com.franjazul.api.model.Cargos;
-import com.franjazul.api.services.CargosService;
+import com.franjazul.api.model.Moleculas;
+import com.franjazul.api.services.MoleculasService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,67 +13,66 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/cargos")
+@RequestMapping("/api/moleculas")
 @CrossOrigin(origins = "http://localhost:4200")
-public class CargosController {
-
+public class MoleculasController {
 
     @Autowired
-    private CargosService cargosService;
+    private MoleculasService moleculasService;
 
-    // GET /api/cargos - Obtener todos los cargos
+    // GET /api/moleculas - Obtener todas las moléculas
     @GetMapping
     public ResponseEntity<Map<String, Object>> doGet() {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            List<Cargos> cargos = cargosService.obtenerTodos();
+            List<Moleculas> moleculas = moleculasService.obtenerTodos();
             response.put("success", true);
-            response.put("data", cargos);
-            response.put("message", "cargos obtenidos exitosamente");
+            response.put("data", moleculas);
+            response.put("message", "Moléculas obtenidas exitosamente");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al obtener Cargos: " + e.getMessage());
+            response.put("message", "Error al obtener moléculas: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    //Obtener un cargo por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doGet(@PathVariable String id) {
+    // GET /api/moleculas/{nombreMol} - Obtener una molécula por nombre
+    @GetMapping("/{nombreMol}")
+    public ResponseEntity<Map<String, Object>> doGet(@PathVariable String nombreMol) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Optional<Cargos> cargoOptional = cargosService.obtenerPorId(id);
+            Optional<Moleculas> moleculaOptional = moleculasService.obtenerPorId(nombreMol);
 
-            if (cargoOptional.isPresent()) {
+            if (moleculaOptional.isPresent()) {
                 response.put("success", true);
-                response.put("data", cargoOptional.get());
-                response.put("message", "Cargo encontrado");
+                response.put("data", moleculaOptional.get());
+                response.put("message", "Molécula encontrada");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "Cargo no encontrado con ID: " + id);
+                response.put("message", "Molécula no encontrada con nombre: " + nombreMol);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al obtener control: " + e.getMessage());
+            response.put("message", "Error al obtener molécula: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // POST /api/cargos - Crear un nuevo cargo
+    // POST /api/moleculas - Crear una nueva molécula
     @PostMapping
-    public ResponseEntity<Map<String, Object>> doPost(@RequestBody Cargos cargo) {
+    public ResponseEntity<Map<String, Object>> doPost(@RequestBody Moleculas molecula) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Cargos nuevoCargo = cargosService.crear(cargo);
+            Moleculas nuevaMolecula = moleculasService.crear(molecula);
             response.put("success", true);
-            response.put("data", nuevoCargo);
-            response.put("message", "Cargo creado exitosamente");
+            response.put("data", nuevaMolecula);
+            response.put("message", "Molécula creada exitosamente");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -81,21 +80,21 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al crear cargo: " + e.getMessage());
+            response.put("message", "Error al crear molécula: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // PATCH /api/cargos/{id} - Actualizar un cargo
-    @PatchMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doPatch(@PathVariable String id, @RequestBody Cargos cargo) {
+    // PATCH /api/moleculas/{nombreMol} - Actualizar una molécula
+    @PatchMapping("/{nombreMol}")
+    public ResponseEntity<Map<String, Object>> doPatch(@PathVariable String nombreMol, @RequestBody Moleculas molecula) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Cargos cargoActualizado = cargosService.actualizar(id, cargo);
+            Moleculas moleculaActualizada = moleculasService.actualizar(nombreMol, molecula);
             response.put("success", true);
-            response.put("data", cargoActualizado);
-            response.put("message", "Cargo actualizado exitosamente");
+            response.put("data", moleculaActualizada);
+            response.put("message", "Molécula actualizada exitosamente");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -103,26 +102,26 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al actualizar el cargo: " + e.getMessage());
+            response.put("message", "Error al actualizar molécula: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // DELETE /api/roles/{id} - Borrado lógico de un cargo
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doDelete(@PathVariable String id) {
+    // DELETE /api/moleculas/{nombreMol} - Borrado físico de una molécula
+    @DeleteMapping("/{nombreMol}")
+    public ResponseEntity<Map<String, Object>> doDelete(@PathVariable String nombreMol) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            boolean eliminado = cargosService.borrar(id);
+            boolean eliminado = moleculasService.borrar(nombreMol);
 
             if (eliminado) {
                 response.put("success", true);
-                response.put("message", "El cargo fue eliminado correctamente");
+                response.put("message", "Molécula eliminada correctamente");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "No se pudo eliminar el cargo");
+                response.put("message", "No se pudo eliminar la molécula");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } catch (RuntimeException e) {
@@ -131,7 +130,7 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al eliminar el cargo: " + e.getMessage());
+            response.put("message", "Error al eliminar molécula: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

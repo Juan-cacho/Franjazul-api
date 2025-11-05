@@ -1,12 +1,9 @@
 package com.franjazul.api.repository;
-import com.franjazul.api.model.Cargos;
+
+import com.franjazul.api.model.EstadoCita;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
-public interface CargosRepository extends JpaRepository<Cargos, String>{
-
-
+public interface EstadoCitaRepository extends JpaRepository<EstadoCita, String> {
 }

@@ -1,7 +1,7 @@
 package com.franjazul.api.controller;
 
-import com.franjazul.api.model.Cargos;
-import com.franjazul.api.services.CargosService;
+import com.franjazul.api.model.TipoServicio;
+import com.franjazul.api.services.TipoServicioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,67 +13,66 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/cargos")
+@RequestMapping("/api/tipos-servicio")
 @CrossOrigin(origins = "http://localhost:4200")
-public class CargosController {
-
+public class TipoServicioController {
 
     @Autowired
-    private CargosService cargosService;
+    private TipoServicioService tipoServicioService;
 
-    // GET /api/cargos - Obtener todos los cargos
+    // GET /api/tipos-servicio - Obtener todos los tipos de servicio
     @GetMapping
     public ResponseEntity<Map<String, Object>> doGet() {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            List<Cargos> cargos = cargosService.obtenerTodos();
+            List<TipoServicio> tiposServicio = tipoServicioService.obtenerTodos();
             response.put("success", true);
-            response.put("data", cargos);
-            response.put("message", "cargos obtenidos exitosamente");
+            response.put("data", tiposServicio);
+            response.put("message", "Tipos de servicio obtenidos exitosamente");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al obtener Cargos: " + e.getMessage());
+            response.put("message", "Error al obtener tipos de servicio: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    //Obtener un cargo por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doGet(@PathVariable String id) {
+    // GET /api/tipos-servicio/{nombreTps} - Obtener un tipo de servicio por nombre
+    @GetMapping("/{nombreTps}")
+    public ResponseEntity<Map<String, Object>> doGet(@PathVariable String nombreTps) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Optional<Cargos> cargoOptional = cargosService.obtenerPorId(id);
+            Optional<TipoServicio> tipoServicioOptional = tipoServicioService.obtenerPorId(nombreTps);
 
-            if (cargoOptional.isPresent()) {
+            if (tipoServicioOptional.isPresent()) {
                 response.put("success", true);
-                response.put("data", cargoOptional.get());
-                response.put("message", "Cargo encontrado");
+                response.put("data", tipoServicioOptional.get());
+                response.put("message", "Tipo de servicio encontrado");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "Cargo no encontrado con ID: " + id);
+                response.put("message", "Tipo de servicio no encontrado con nombre: " + nombreTps);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al obtener control: " + e.getMessage());
+            response.put("message", "Error al obtener tipo de servicio: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // POST /api/cargos - Crear un nuevo cargo
+    // POST /api/tipos-servicio - Crear un nuevo tipo de servicio
     @PostMapping
-    public ResponseEntity<Map<String, Object>> doPost(@RequestBody Cargos cargo) {
+    public ResponseEntity<Map<String, Object>> doPost(@RequestBody TipoServicio tipoServicio) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Cargos nuevoCargo = cargosService.crear(cargo);
+            TipoServicio nuevoTipoServicio = tipoServicioService.crear(tipoServicio);
             response.put("success", true);
-            response.put("data", nuevoCargo);
-            response.put("message", "Cargo creado exitosamente");
+            response.put("data", nuevoTipoServicio);
+            response.put("message", "Tipo de servicio creado exitosamente");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -81,21 +80,21 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al crear cargo: " + e.getMessage());
+            response.put("message", "Error al crear tipo de servicio: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // PATCH /api/cargos/{id} - Actualizar un cargo
-    @PatchMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doPatch(@PathVariable String id, @RequestBody Cargos cargo) {
+    // PATCH /api/tipos-servicio/{nombreTps} - Actualizar un tipo de servicio
+    @PatchMapping("/{nombreTps}")
+    public ResponseEntity<Map<String, Object>> doPatch(@PathVariable String nombreTps, @RequestBody TipoServicio tipoServicio) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Cargos cargoActualizado = cargosService.actualizar(id, cargo);
+            TipoServicio tipoServicioActualizado = tipoServicioService.actualizar(nombreTps, tipoServicio);
             response.put("success", true);
-            response.put("data", cargoActualizado);
-            response.put("message", "Cargo actualizado exitosamente");
+            response.put("data", tipoServicioActualizado);
+            response.put("message", "Tipo de servicio actualizado exitosamente");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("success", false);
@@ -103,26 +102,26 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al actualizar el cargo: " + e.getMessage());
+            response.put("message", "Error al actualizar tipo de servicio: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // DELETE /api/roles/{id} - Borrado lógico de un cargo
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> doDelete(@PathVariable String id) {
+    // DELETE /api/tipos-servicio/{nombreTps} - Borrado físico de un tipo de servicio
+    @DeleteMapping("/{nombreTps}")
+    public ResponseEntity<Map<String, Object>> doDelete(@PathVariable String nombreTps) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            boolean eliminado = cargosService.borrar(id);
+            boolean eliminado = tipoServicioService.borrar(nombreTps);
 
             if (eliminado) {
                 response.put("success", true);
-                response.put("message", "El cargo fue eliminado correctamente");
+                response.put("message", "Tipo de servicio eliminado correctamente");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "No se pudo eliminar el cargo");
+                response.put("message", "No se pudo eliminar el tipo de servicio");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } catch (RuntimeException e) {
@@ -131,7 +130,7 @@ public class CargosController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al eliminar el cargo: " + e.getMessage());
+            response.put("message", "Error al eliminar tipo de servicio: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

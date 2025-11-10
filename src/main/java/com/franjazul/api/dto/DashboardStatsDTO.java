@@ -10,23 +10,12 @@ public class DashboardStatsDTO {
     private Long totalCertificados;
     private Long certificadosVencidos;
     private Long certificadosVigentes;
+    private Double porcentajeCompletadas;
+    private Double variacionMesAnterior;
+    private Long serviciosActivos;
 
     // Constructor vacío
     public DashboardStatsDTO() {
-    }
-
-    // Constructor con todos los parámetros
-    public DashboardStatsDTO(Long totalCitas, Long citasPendientes, Long citasCompletadas,
-                             Long citasCanceladas, Long totalTecnicos, Long totalCertificados,
-                             Long certificadosVencidos, Long certificadosVigentes) {
-        this.totalCitas = totalCitas;
-        this.citasPendientes = citasPendientes;
-        this.citasCompletadas = citasCompletadas;
-        this.citasCanceladas = citasCanceladas;
-        this.totalTecnicos = totalTecnicos;
-        this.totalCertificados = totalCertificados;
-        this.certificadosVencidos = certificadosVencidos;
-        this.certificadosVigentes = certificadosVigentes;
     }
 
     // Getters y Setters
@@ -92,5 +81,29 @@ public class DashboardStatsDTO {
 
     public void setCertificadosVigentes(Long certificadosVigentes) {
         this.certificadosVigentes = certificadosVigentes;
+    }
+
+    public Double getPorcentajeCompletadas() {
+        return porcentajeCompletadas;
+    }
+
+    public void setPorcentajeCompletadas(Double porcentajeCompletadas) {
+        this.porcentajeCompletadas = porcentajeCompletadas;
+    }
+
+    public Double getVariacionMesAnterior() {
+        return variacionMesAnterior;
+    }
+
+    public void setVariacionMesAnterior(Double variacionMesAnterior) {
+        this.variacionMesAnterior = variacionMesAnterior;
+    }
+
+    public Long getServiciosActivos() {
+        return serviciosActivos;
+    }
+
+    public void setServiciosActivos(Long serviciosActivos) {
+        this.serviciosActivos = serviciosActivos;
     }
 }

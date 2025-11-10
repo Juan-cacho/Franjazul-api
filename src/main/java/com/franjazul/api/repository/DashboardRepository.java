@@ -16,7 +16,7 @@ public class DashboardRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // Obtener estadísticas del dashboard usando el paquete
+    // Obtener estadísticas del dashboard (tarjetas superiores)
     public DashboardStatsDTO obtenerEstadisticasDashboard() {
         DashboardStatsDTO stats = new DashboardStatsDTO();
 
@@ -26,8 +26,6 @@ public class DashboardRepository {
 
         try {
             connection = jdbcTemplate.getDataSource().getConnection();
-
-            // Llamar a la función dentro del paquete
             callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_ESTADISTICAS_DASHBOARD }");
             callableStatement.registerOutParameter(1, Types.REF_CURSOR);
             callableStatement.execute();
@@ -36,13 +34,16 @@ public class DashboardRepository {
 
             if (resultSet.next()) {
                 stats.setTotalCitas(resultSet.getLong("TOTAL_CITAS"));
-                stats.setCitasPendientes(resultSet.getLong("CITAS_PENDIENTES"));
-                stats.setCitasCompletadas(resultSet.getLong("CITAS_COMPLETADAS"));
-                stats.setCitasCanceladas(resultSet.getLong("CITAS_CANCELADAS"));
+                stats.setCitasPendientes(resultSet.getLong("CITAS_PENDIENTES_SEMANA"));
+                stats.setCitasCompletadas(resultSet.getLong("CITAS_COMPLETADAS_MES"));
+                stats.setCitasCanceladas(resultSet.getLong("TOTAL_CITAS_MES") - resultSet.getLong("CITAS_COMPLETADAS_MES"));
                 stats.setTotalTecnicos(resultSet.getLong("TOTAL_TECNICOS"));
-                stats.setTotalCertificados(resultSet.getLong("TOTAL_CERTIFICADOS"));
+                stats.setTotalCertificados(resultSet.getLong("CERTIFICADOS_VIGENTES") + resultSet.getLong("CERTIFICADOS_VENCIDOS"));
                 stats.setCertificadosVencidos(resultSet.getLong("CERTIFICADOS_VENCIDOS"));
                 stats.setCertificadosVigentes(resultSet.getLong("CERTIFICADOS_VIGENTES"));
+                stats.setPorcentajeCompletadas(resultSet.getDouble("PORCENTAJE_COMPLETADAS"));
+                stats.setVariacionMesAnterior(resultSet.getDouble("VARIACION_MES_ANTERIOR"));
+                stats.setServiciosActivos(resultSet.getLong("SERVICIOS_ACTIVOS"));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener estadísticas del dashboard: " + e.getMessage(), e);
@@ -53,7 +54,7 @@ public class DashboardRepository {
         return stats;
     }
 
-    // Obtener citas por estado usando el paquete
+    // Obtener citas por estado
     public List<CitasPorEstadoDTO> obtenerCitasPorEstado() {
         List<CitasPorEstadoDTO> lista = new ArrayList<>();
 
@@ -63,8 +64,6 @@ public class DashboardRepository {
 
         try {
             connection = jdbcTemplate.getDataSource().getConnection();
-
-            // Llamar a la función dentro del paquete
             callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_CITAS_POR_ESTADO }");
             callableStatement.registerOutParameter(1, Types.REF_CURSOR);
             callableStatement.execute();
@@ -87,7 +86,7 @@ public class DashboardRepository {
         return lista;
     }
 
-    // Obtener rendimiento de técnicos usando el paquete
+    // Obtener rendimiento de técnicos
     public List<CitasPorTecnicoDTO> obtenerRendimientoTecnicos() {
         List<CitasPorTecnicoDTO> lista = new ArrayList<>();
 
@@ -97,8 +96,6 @@ public class DashboardRepository {
 
         try {
             connection = jdbcTemplate.getDataSource().getConnection();
-
-            // Llamar a la función dentro del paquete
             callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_RENDIMIENTO_TECNICOS }");
             callableStatement.registerOutParameter(1, Types.REF_CURSOR);
             callableStatement.execute();
@@ -125,7 +122,7 @@ public class DashboardRepository {
         return lista;
     }
 
-    // Obtener citas de un técnico específico usando el paquete
+    // Obtener citas de un técnico específico
     public List<CitaDetalleDTO> obtenerCitasPorTecnico(String idTecnico) {
         List<CitaDetalleDTO> lista = new ArrayList<>();
 
@@ -135,8 +132,6 @@ public class DashboardRepository {
 
         try {
             connection = jdbcTemplate.getDataSource().getConnection();
-
-            // Llamar a la función dentro del paquete con parámetro
             callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_CITAS_POR_TECNICO(?) }");
             callableStatement.registerOutParameter(1, Types.REF_CURSOR);
             callableStatement.setString(2, idTecnico);
@@ -174,7 +169,7 @@ public class DashboardRepository {
         return lista;
     }
 
-    // NUEVA FUNCIÓN: Obtener certificados próximos a vencer
+    // Obtener certificados próximos a vencer
     public List<CertificadoPorVencerDTO> obtenerCertificadosPorVencer(Integer diasAdelante) {
         List<CertificadoPorVencerDTO> lista = new ArrayList<>();
 
@@ -185,13 +180,11 @@ public class DashboardRepository {
         try {
             connection = jdbcTemplate.getDataSource().getConnection();
 
-            // Llamar a la función dentro del paquete con parámetro opcional
             if (diasAdelante != null) {
                 callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_CERTIFICADOS_POR_VENCER(?) }");
                 callableStatement.registerOutParameter(1, Types.REF_CURSOR);
                 callableStatement.setInt(2, diasAdelante);
             } else {
-                // Usar el valor por defecto (30 días)
                 callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_CERTIFICADOS_POR_VENCER }");
                 callableStatement.registerOutParameter(1, Types.REF_CURSOR);
             }
@@ -221,6 +214,99 @@ public class DashboardRepository {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener certificados por vencer: " + e.getMessage(), e);
+        } finally {
+            cerrarRecursos(resultSet, callableStatement, connection);
+        }
+
+        return lista;
+    }
+
+    // NUEVO: Obtener indicadores de cumplimiento
+    public List<IndicadorCumplimientoDTO> obtenerIndicadoresCumplimiento() {
+        List<IndicadorCumplimientoDTO> lista = new ArrayList<>();
+
+        Connection connection = null;
+        CallableStatement callableStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = jdbcTemplate.getDataSource().getConnection();
+            callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_INDICADORES_CUMPLIMIENTO }");
+            callableStatement.registerOutParameter(1, Types.REF_CURSOR);
+            callableStatement.execute();
+
+            resultSet = (ResultSet) callableStatement.getObject(1);
+
+            while (resultSet.next()) {
+                IndicadorCumplimientoDTO dto = new IndicadorCumplimientoDTO();
+                dto.setNombreServicio(resultSet.getString("NOMBRE_SERVICIO"));
+                dto.setTipoServicio(resultSet.getString("TIPO_SERVICIO"));
+                dto.setTotalVecesSolicitado(resultSet.getLong("TOTAL_VECES_SOLICITADO"));
+                dto.setCompletadas(resultSet.getLong("COMPLETADAS"));
+                dto.setPorcentajeCumplimiento(resultSet.getDouble("PORCENTAJE_CUMPLIMIENTO"));
+                lista.add(dto);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener indicadores de cumplimiento: " + e.getMessage(), e);
+        } finally {
+            cerrarRecursos(resultSet, callableStatement, connection);
+        }
+
+        return lista;
+    }
+
+    // NUEVO: Obtener próximas citas
+    public List<ProximaCitaDTO> obtenerProximasCitas(Integer cantidad) {
+        List<ProximaCitaDTO> lista = new ArrayList<>();
+
+        Connection connection = null;
+        CallableStatement callableStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = jdbcTemplate.getDataSource().getConnection();
+
+            if (cantidad != null) {
+                callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_PROXIMAS_CITAS(?) }");
+                callableStatement.registerOutParameter(1, Types.REF_CURSOR);
+                callableStatement.setInt(2, cantidad);
+            } else {
+                callableStatement = connection.prepareCall("{ ? = call PKG_ESTADISTICAS.FN_PROXIMAS_CITAS }");
+                callableStatement.registerOutParameter(1, Types.REF_CURSOR);
+            }
+
+            callableStatement.execute();
+            resultSet = (ResultSet) callableStatement.getObject(1);
+
+            while (resultSet.next()) {
+                ProximaCitaDTO dto = new ProximaCitaDTO();
+                dto.setIdCita(resultSet.getInt("ID_CITA"));
+                dto.setLugar(resultSet.getString("LUGAR"));
+                dto.setDireccion(resultSet.getString("DIRECCION"));
+
+                Timestamp fechaInicio = resultSet.getTimestamp("FECHA_INICIO");
+                if (fechaInicio != null) {
+                    dto.setFechaInicio(fechaInicio.toLocalDateTime());
+                }
+
+                Timestamp fechaFin = resultSet.getTimestamp("FECHA_FIN");
+                if (fechaFin != null) {
+                    dto.setFechaFin(fechaFin.toLocalDateTime());
+                }
+
+                dto.setFechaFormato(resultSet.getString("FECHA_FORMATO"));
+                dto.setHoraInicio(resultSet.getString("HORA_INICIO"));
+                dto.setHoraFin(resultSet.getString("HORA_FIN"));
+                dto.setTecnicoResponsable(resultSet.getString("TECNICO_RESPONSABLE"));
+                dto.setUsuarioCreo(resultSet.getString("USUARIO_CREO"));
+                dto.setEstado(resultSet.getString("ESTADO"));
+                dto.setDescripcionEstado(resultSet.getString("DESCRIPCION_ESTADO"));
+                dto.setObservaciones(resultSet.getString("OBSERVACIONES"));
+                dto.setServicios(resultSet.getString("SERVICIOS"));
+                lista.add(dto);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener próximas citas: " + e.getMessage(), e);
         } finally {
             cerrarRecursos(resultSet, callableStatement, connection);
         }

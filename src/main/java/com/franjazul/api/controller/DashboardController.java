@@ -95,9 +95,7 @@ public class DashboardController {
         }
     }
 
-    // NUEVO ENDPOINT
     // GET /api/dashboard/certificados-por-vencer - Obtener certificados próximos a vencer
-    // Parámetro opcional: dias (default: 30)
     @GetMapping("/certificados-por-vencer")
     public ResponseEntity<Map<String, Object>> obtenerCertificadosPorVencer(
             @RequestParam(required = false) Integer dias) {
@@ -116,6 +114,47 @@ public class DashboardController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al obtener certificados por vencer: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // NUEVO ENDPOINT: GET /api/dashboard/indicadores-cumplimiento
+    @GetMapping("/indicadores-cumplimiento")
+    public ResponseEntity<Map<String, Object>> obtenerIndicadoresCumplimiento() {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<IndicadorCumplimientoDTO> indicadores = dashboardService.obtenerIndicadoresCumplimiento();
+            response.put("success", true);
+            response.put("data", indicadores);
+            response.put("message", "Indicadores de cumplimiento obtenidos exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al obtener indicadores: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // NUEVO ENDPOINT: GET /api/dashboard/proximas-citas
+    @GetMapping("/proximas-citas")
+    public ResponseEntity<Map<String, Object>> obtenerProximasCitas(
+            @RequestParam(required = false) Integer cantidad) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<ProximaCitaDTO> citas = dashboardService.obtenerProximasCitas(cantidad);
+            response.put("success", true);
+            response.put("data", citas);
+            response.put("message", "Próximas citas obtenidas exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al obtener próximas citas: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

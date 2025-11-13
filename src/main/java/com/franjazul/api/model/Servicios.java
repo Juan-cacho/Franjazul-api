@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 public class Servicios {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_servicios")
+    @SequenceGenerator(name = "seq_servicios", sequenceName = "SEQ_SERVICIOS", allocationSize = 1)
     @Column(name = "ID_SERVICIO")
     private Integer idServicio;
 
@@ -26,6 +28,13 @@ public class Servicios {
 
     // Constructor vacío
     public Servicios() {
+    }
+
+    public Servicios(String nombreSer, String descripcionSer, TipoServicio tipoServicio, Moleculas molecula) {
+        this.nombreSer = nombreSer;
+        this.descripcionSer = descripcionSer;
+        this.tipoServicio = tipoServicio;
+        this.molecula = molecula;
     }
 
     // Constructor con parámetros

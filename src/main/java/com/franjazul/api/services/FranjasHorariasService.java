@@ -15,32 +15,31 @@ public class FranjasHorariasService {
     @Autowired
     private FranjasHorariasRepository franjasHorariasRepository;
 
-    // Obtener una franja horaria por ID
     public Optional<FranjasHorarias> obtenerPorId(Integer id) {
         return franjasHorariasRepository.findById(id);
     }
 
-    // Obtener todas las franjas horarias
     public List<FranjasHorarias> obtenerTodos() {
         return franjasHorariasRepository.findAll();
     }
 
-    // Crear una nueva franja horaria
     public FranjasHorarias crear(FranjasHorarias franjaHoraria) {
-        // Validar que el ID no exista
-        if (franjasHorariasRepository.existsById(franjaHoraria.getIdFranja())) {
-            throw new RuntimeException("Ya existe una franja horaria con el ID: " + franjaHoraria.getIdFranja());
+        // el ID se hace null para que la secuencia lo genere
+        franjaHoraria.setIdFranja(null);
+
+        // Validar que las fechas no sean nulas
+        if (franjaHoraria.getFechaInicio() == null || franjaHoraria.getFechaFin() == null) {
+            throw new RuntimeException("Las fechas de inicio y fin son obligatorias");
         }
 
         // Validar que la fecha de inicio sea anterior a la fecha de fin
-//        if (franjaHoraria.getFechaInicio().after(franjaHoraria.getFechaFin())) {
-//            throw new RuntimeException("La fecha de inicio debe ser anterior a la fecha de fin");
-//        }
+        if (franjaHoraria.getFechaInicio().isAfter(franjaHoraria.getFechaFin())) {
+            throw new RuntimeException("La fecha de inicio debe ser anterior a la fecha de fin");
+        }
 
         return franjasHorariasRepository.save(franjaHoraria);
     }
 
-    // Actualizar una franja horaria existente
     public FranjasHorarias actualizar(Integer id, FranjasHorarias franjaHorariaActualizada) {
         Optional<FranjasHorarias> franjaHorariaOpt = franjasHorariasRepository.findById(id);
 
@@ -60,14 +59,13 @@ public class FranjasHorariasService {
         }
 
         // Validar que la fecha de inicio sea anterior a la fecha de fin
-//        if (franjaHorariaExistente.getFechaInicio().after(franjaHorariaExistente.getFechaFin())) {
-//            throw new RuntimeException("La fecha de inicio debe ser anterior a la fecha de fin");
-//        }
+        if (franjaHorariaExistente.getFechaInicio().isAfter(franjaHorariaExistente.getFechaFin())) {
+            throw new RuntimeException("La fecha de inicio debe ser anterior a la fecha de fin");
+        }
 
         return franjasHorariasRepository.save(franjaHorariaExistente);
     }
 
-    // Borrar físicamente
     public boolean borrar(Integer id) {
         if (!franjasHorariasRepository.existsById(id)) {
             throw new RuntimeException("Franja horaria no encontrada con ID: " + id);
@@ -77,9 +75,7 @@ public class FranjasHorariasService {
         return true;
     }
 
-    // Verificar si existe una franja horaria
     public boolean existe(Integer id) {
         return franjasHorariasRepository.existsById(id);
     }
 }
-

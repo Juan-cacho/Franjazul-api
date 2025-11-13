@@ -26,6 +26,8 @@ public class FormulariosService {
 
     // Crear un nuevo formulario
     public Formularios crear(Formularios formulario) {
+        formulario.setIdForm(null); // Se hace el id null para que lo maneje el autoincremento de la base de datos
+
         // Validar que el título no exista
         Optional<Formularios> formularioExistente = formularioRepository.findByTituloForm(formulario.getTituloForm());
         if (formularioExistente.isPresent()) {
@@ -46,6 +48,7 @@ public class FormulariosService {
 
         return formularioRepository.save(formulario);
     }
+
 
     // Actualizar un formulario existente
     public Formularios actualizar(Integer id, Formularios formularioActualizado) {

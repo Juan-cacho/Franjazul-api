@@ -34,6 +34,8 @@ public class ServiciosService {
 
     // Crear un nuevo servicio
     public Servicios crear(Servicios servicio) {
+
+        servicio.setIdServicio(null);
         // Validar que el nombre no exista
         Optional<Servicios> servicioExistente = serviciosRepository.findByNombreSer(servicio.getNombreSer());
         if (servicioExistente.isPresent()) {

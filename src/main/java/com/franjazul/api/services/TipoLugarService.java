@@ -14,18 +14,18 @@ public class TipoLugarService {
     @Autowired
     private TipoLugarRepository tipoLugarRepository;
 
-    // Obtener un tipo de lugar por ID
     public Optional<TipoLugar> obtenerPorId(Integer id) {
         return tipoLugarRepository.findById(id);
     }
 
-    // Obtener todos los tipos de lugar
     public List<TipoLugar> obtenerTodos() {
         return tipoLugarRepository.findAll();
     }
 
-    // Crear un nuevo tipo de lugar
     public TipoLugar crear(TipoLugar tipoLugar) {
+        // el ID se pone null para que la secuencia lo genere
+        tipoLugar.setIdTl(null);
+
         // Validar que el nombre no exista
         Optional<TipoLugar> tipoLugarExistente = tipoLugarRepository.findByNombreTl(tipoLugar.getNombreTl());
         if (tipoLugarExistente.isPresent()) {
@@ -35,7 +35,6 @@ public class TipoLugarService {
         return tipoLugarRepository.save(tipoLugar);
     }
 
-    // Actualizar un tipo de lugar existente
     public TipoLugar actualizar(Integer id, TipoLugar tipoLugarActualizado) {
         Optional<TipoLugar> tipoLugarOpt = tipoLugarRepository.findById(id);
 
@@ -53,7 +52,6 @@ public class TipoLugarService {
         return tipoLugarRepository.save(tipoLugarExistente);
     }
 
-    // Borrar físicamente
     public boolean borrar(Integer id) {
         if (!tipoLugarRepository.existsById(id)) {
             throw new RuntimeException("Tipo de lugar no encontrado con ID: " + id);
@@ -63,7 +61,6 @@ public class TipoLugarService {
         return true;
     }
 
-    // Verificar si existe un tipo de lugar
     public boolean existe(Integer id) {
         return tipoLugarRepository.existsById(id);
     }

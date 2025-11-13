@@ -8,22 +8,23 @@ import java.time.LocalDateTime;
 public class FranjasHorarias {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_franjas_horarias")
+    @SequenceGenerator(name = "seq_franjas_horarias", sequenceName = "SEQ_FRANJAS_HORARIAS", allocationSize = 1)
     @Column(name = "ID_FRANJA")
     private Integer idFranja;
 
-    @Column(name = "FECHA_INICIO", nullable = false, columnDefinition = "DATE")
+    @Column(name = "FECHA_INICIO", nullable = false)
     private LocalDateTime fechaInicio;
 
-    @Column(name = "FECHA_FIN", nullable = false, columnDefinition = "DATE")
+    @Column(name = "FECHA_FIN", nullable = false)
     private LocalDateTime fechaFin;
 
     // Constructor vacío
     public FranjasHorarias() {
     }
 
-    // Constructor con parámetros
-    public FranjasHorarias(Integer idFranja, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        this.idFranja = idFranja;
+    // Constructor SIN ID (para crear)
+    public FranjasHorarias(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }

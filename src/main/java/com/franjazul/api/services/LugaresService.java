@@ -30,6 +30,8 @@ public class LugaresService {
 
     // Crear un nuevo lugar
     public Lugares crear(Lugares lugar) {
+
+        lugar.setIdLugar(null);
         // Validar que el nombre no exista
         Optional<Lugares> lugarExistente = lugaresRepository.findByNombreLugar(lugar.getNombreLugar());
         if (lugarExistente.isPresent()) {

@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 public class Rolles {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_rolles")
+    @SequenceGenerator(name = "seq_rolles", sequenceName = "SEQ_ROLLES", allocationSize = 1)
     @Column(name = "ID_ROL")
     private Integer idRol;
 
@@ -16,17 +18,21 @@ public class Rolles {
     @Column(name = "DESCRIPCION_ROL", nullable = false, length = 100)
     private String descripcionRol;
 
-
     // Constructor vacío
     public Rolles() {
     }
 
-    // Constructor con parámetros
+    // Constructor sin ID (para crear nuevos roles)
+    public Rolles(String nombreRol, String descripcionRol) {
+        this.nombreRol = nombreRol;
+        this.descripcionRol = descripcionRol;
+    }
+
+    // Constructor completo
     public Rolles(Integer idRol, String nombreRol, String descripcionRol) {
         this.idRol = idRol;
         this.nombreRol = nombreRol;
         this.descripcionRol = descripcionRol;
-
     }
 
     // Getters y Setters
@@ -53,6 +59,4 @@ public class Rolles {
     public void setDescripcionRol(String descripcionRol) {
         this.descripcionRol = descripcionRol;
     }
-
-
 }

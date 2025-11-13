@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 public class Formularios {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_formularios")
+    @SequenceGenerator(name = "seq_formularios", sequenceName = "SEQ_FORMULARIOS", allocationSize = 1)
     @Column(name = "ID_FORM")
     private Integer idForm;
 
@@ -30,9 +32,8 @@ public class Formularios {
     public Formularios() {
     }
 
-    // Constructor con parámetros
-    public Formularios(Integer idForm, String tituloForm, String urlForm, Integer esPadre, Integer orden) {
-        this.idForm = idForm;
+    // Constructor SIN ID (para crear)
+    public Formularios(String tituloForm, String urlForm, Integer esPadre, Integer orden) {
         this.tituloForm = tituloForm;
         this.urlForm = urlForm;
         this.esPadre = esPadre;

@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 public class Lugares {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_lugares")
+    @SequenceGenerator(name = "seq_lugares", sequenceName = "SEQ_LUGARES", allocationSize = 1)
     @Column(name = "ID_LUGAR")
     private Integer idLugar;
 
@@ -28,9 +30,8 @@ public class Lugares {
     public Lugares() {
     }
 
-    // Constructor con parámetros
-    public Lugares(Integer idLugar, String nombreLugar, String direccionLugar, TipoLugar tipoLugar, Lugares lugarPadre) {
-        this.idLugar = idLugar;
+    // Constructor SIN ID
+    public Lugares(String nombreLugar, String direccionLugar, TipoLugar tipoLugar, Lugares lugarPadre) {
         this.nombreLugar = nombreLugar;
         this.direccionLugar = direccionLugar;
         this.tipoLugar = tipoLugar;

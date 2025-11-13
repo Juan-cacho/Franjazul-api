@@ -65,6 +65,24 @@ public class UsuariosController {
         }
     }
 
+    // GET /api/usuarios/por-cargo/{nombreCargo} - Obtener usuarios por cargo
+    @GetMapping("/por-cargo/{nombreCargo}")
+    public ResponseEntity<Map<String, Object>> obtenerPorCargo(@PathVariable String nombreCargo) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<Usuarios> usuarios = usuarioService.obtenerPorCargo(nombreCargo);
+            response.put("success", true);
+            response.put("data", usuarios);
+            response.put("message", "Usuarios obtenidos por cargo exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al obtener usuarios por cargo: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     // POST /api/usuarios - Crear un nuevo usuario
     @PostMapping
     public ResponseEntity<Map<String, Object>> doPost(@RequestBody Usuarios usuario) {

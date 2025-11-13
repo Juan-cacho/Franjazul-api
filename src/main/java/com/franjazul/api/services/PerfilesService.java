@@ -35,6 +35,9 @@ public class PerfilesService {
 
     // Crear un nuevo perfil
     public Perfiles crear(Perfiles perfil) {
+
+        perfil.setIdPer(null); //Hacemos el id null, porque la base de datos lo maneja con autoincremento
+
         // Validar que el nombre no exista
         Optional<Perfiles> perfilExistente = perfilRepository.findByNombrePer(perfil.getNombrePer());
         if (perfilExistente.isPresent()) {
@@ -54,6 +57,7 @@ public class PerfilesService {
         perfil.setRol(rolOptional.get());
         return perfilRepository.save(perfil);
     }
+
 
     // Actualizar un perfil existente
     public Perfiles actualizar(Integer id, Perfiles perfilActualizado) {

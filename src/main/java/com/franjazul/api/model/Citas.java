@@ -1,5 +1,6 @@
 package com.franjazul.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -7,6 +8,8 @@ import jakarta.persistence.*;
 public class Citas {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_citas")
+    @SequenceGenerator(name = "seq_citas", sequenceName = "SEQ_CITAS", allocationSize = 1)
     @Column(name = "ID_CITA")
     private Integer idCita;
 
@@ -23,25 +26,24 @@ public class Citas {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "FRANJA_EN_CITA", referencedColumnName = "ID_FRANJA", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private FranjasHorarias franjaHoraria;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "LUGAR_EN_CITA", referencedColumnName = "ID_LUGAR", nullable = false)
+    @JsonIgnoreProperties({"tipoLugar", "lugarPadre", "hibernateLazyInitializer", "handler"})
     private Lugares lugar;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "EC_EN_CITA", referencedColumnName = "NOMBRE_EC", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private EstadoCita estadoCita;
 
-    // Constructor vacío
-    public Citas() {
-    }
+    // Constructores
+    public Citas() {}
 
-    // Constructor con parámetros
-    public Citas(Integer idCita, String observacionesCita, Usuarios usuarioTecnico,
-                 Usuarios usuarioCreo, FranjasHorarias franjaHoraria, Lugares lugar,
-                 EstadoCita estadoCita) {
-        this.idCita = idCita;
+    public Citas(String observacionesCita, Usuarios usuarioTecnico, Usuarios usuarioCreo,
+                 FranjasHorarias franjaHoraria, Lugares lugar, EstadoCita estadoCita) {
         this.observacionesCita = observacionesCita;
         this.usuarioTecnico = usuarioTecnico;
         this.usuarioCreo = usuarioCreo;

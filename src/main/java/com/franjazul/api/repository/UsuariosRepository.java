@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,4 +22,7 @@ public interface UsuariosRepository extends JpaRepository<Usuarios, String> {
 
     // Verificar si existe un email
     boolean existsByEmailUs(String emailUs);
+
+    // Buscar usuarios por nombre de cargo
+    List<Usuarios> findByCargoDeUsuario_NombreCargo(String nombreCargo);
 }

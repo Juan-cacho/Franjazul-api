@@ -40,16 +40,14 @@ public class CargosService {
         Cargos cargoExistente = cargosRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cargo no encontrado con ID: " + id));
 
-        // Actualiza solo si se envió
-        if (cargoActualizado.getNombreCargo() != null) {
-            cargoExistente.setNombreCargo(cargoActualizado.getNombreCargo());
-        }
+        // actualizar campos
         if (cargoActualizado.getDescripcionCargo() != null) {
             cargoExistente.setDescripcionCargo(cargoActualizado.getDescripcionCargo());
         }
-
-        return cargosRepository.save(cargoActualizado);
+        
+        return cargosRepository.save(cargoExistente);
     }
+
 
     //Borrar fisicamente
     public boolean borrar(String id) {

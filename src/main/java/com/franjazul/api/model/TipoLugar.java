@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 public class TipoLugar {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_tipo_lugar")
+    @SequenceGenerator(name = "seq_tipo_lugar", sequenceName = "SEQ_TIPO_LUGAR", allocationSize = 1)
     @Column(name = "ID_TL")
     private Integer idTl;
 
@@ -17,9 +19,8 @@ public class TipoLugar {
     public TipoLugar() {
     }
 
-    // Constructor con parámetros
-    public TipoLugar(Integer idTl, String nombreTl) {
-        this.idTl = idTl;
+    // Constructor SIN ID (para crear)
+    public TipoLugar(String nombreTl) {
         this.nombreTl = nombreTl;
     }
 

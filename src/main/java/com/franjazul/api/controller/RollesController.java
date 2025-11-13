@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,11 +35,12 @@ public class RollesController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al obtener roles: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    //Obtener un rol por ID
+    // GET /api/roles/{id} - Obtener un rol por ID
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> doGet(@PathVariable Integer id) {
         Map<String, Object> response = new HashMap<>();
@@ -59,6 +61,7 @@ public class RollesController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al obtener rol: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -69,18 +72,28 @@ public class RollesController {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            // No debe venir el ID desde el frontend
+            rol.setIdRol(null);
+
             Rolles nuevoRol = rolService.crear(rol);
             response.put("success", true);
             response.put("data", nuevoRol);
             response.put("message", "Rol creado exitosamente");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (DataIntegrityViolationException e) {
+            response.put("success", false);
+            response.put("message", "Error de integridad: Ya existe un rol con ese nombre o datos duplicados");
+            response.put("error", "DataIntegrityViolationException");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (RuntimeException e) {
             response.put("success", false);
             response.put("message", e.getMessage());
+            response.put("error", "RuntimeException");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al crear rol: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -96,18 +109,25 @@ public class RollesController {
             response.put("data", rolActualizado);
             response.put("message", "Rol actualizado exitosamente");
             return ResponseEntity.ok(response);
+        } catch (DataIntegrityViolationException e) {
+            response.put("success", false);
+            response.put("message", "Error de integridad: Ya existe un rol con ese nombre");
+            response.put("error", "DataIntegrityViolationException");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (RuntimeException e) {
             response.put("success", false);
             response.put("message", e.getMessage());
+            response.put("error", "RuntimeException");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al actualizar rol: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
-    // DELETE /api/roles/{id} - Borrado lógico de un rol
+    // DELETE /api/roles/{id} - Borrado físico de un rol
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> doDelete(@PathVariable Integer id) {
         Map<String, Object> response = new HashMap<>();
@@ -124,13 +144,20 @@ public class RollesController {
                 response.put("message", "No se pudo eliminar el rol");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
+        } catch (DataIntegrityViolationException e) {
+            response.put("success", false);
+            response.put("message", "No se puede eliminar el rol porque está siendo utilizado por otros registros");
+            response.put("error", "DataIntegrityViolationException");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         } catch (RuntimeException e) {
             response.put("success", false);
             response.put("message", e.getMessage());
+            response.put("error", "RuntimeException");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al eliminar rol: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

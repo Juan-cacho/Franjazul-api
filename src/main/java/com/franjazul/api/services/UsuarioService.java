@@ -194,4 +194,9 @@ public class UsuarioService {
 
         return response;
     }
+
+    // Obtener usuarios por cargo
+    public List<Usuarios> obtenerPorCargo(String nombreCargo) {
+        return usuarioRepository.findByCargoDeUsuario_NombreCargo(nombreCargo);
+    }
 }

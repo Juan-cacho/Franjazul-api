@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 public class Perfiles {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_perfiles")
+    @SequenceGenerator(name = "seq_perfiles", sequenceName = "SEQ_PERFILES", allocationSize = 1)
     @Column(name = "ID_PER")
     private Integer idPer;
 
@@ -23,6 +25,12 @@ public class Perfiles {
 
     // Constructor vacío
     public Perfiles() {
+    }
+
+    public Perfiles(String nombrePer, String descripcionPer, Rolles rol) {
+        this.nombrePer = nombrePer;
+        this.descripcionPer = descripcionPer;
+        this.rol = rol;
     }
 
     // Constructor con parámetros

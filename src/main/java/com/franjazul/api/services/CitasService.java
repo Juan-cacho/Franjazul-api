@@ -43,6 +43,8 @@ public class CitasService {
 
     // Crear una nueva cita
     public Citas crear(Citas cita) {
+
+        cita.setIdCita(null);
         // Validar que el ID no exista
         if (citasRepository.existsById(cita.getIdCita())) {
             throw new RuntimeException("Ya existe una cita con el ID: " + cita.getIdCita());

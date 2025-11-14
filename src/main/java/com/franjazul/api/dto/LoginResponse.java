@@ -2,6 +2,7 @@ package com.franjazul.api.dto;
 
 public class LoginResponse {
 
+    private String token;
     private String idUsuario;
     private String nombreCompleto;
     private String email;
@@ -9,13 +10,12 @@ public class LoginResponse {
     private Integer idPerfil;
     private String nombrePerfil;
 
-    // Constructor vacío
     public LoginResponse() {
     }
 
-    // Constructor con parámetros
-    public LoginResponse(String idUsuario, String nombreCompleto, String email,
-                         String cargo, Integer idPerfil, String nombrePerfil) {
+    public LoginResponse(String token, String idUsuario, String nombreCompleto,
+                         String email, String cargo, Integer idPerfil, String nombrePerfil) {
+        this.token = token;
         this.idUsuario = idUsuario;
         this.nombreCompleto = nombreCompleto;
         this.email = email;
@@ -24,7 +24,14 @@ public class LoginResponse {
         this.nombrePerfil = nombrePerfil;
     }
 
-    // Getters y Setters
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public String getIdUsuario() {
         return idUsuario;
     }

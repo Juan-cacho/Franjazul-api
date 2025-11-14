@@ -314,7 +314,6 @@ public class DashboardRepository {
         return lista;
     }
 
-    // Método auxiliar para cerrar recursos
     private void cerrarRecursos(ResultSet rs, CallableStatement cs, Connection conn) {
         try {
             if (rs != null) {

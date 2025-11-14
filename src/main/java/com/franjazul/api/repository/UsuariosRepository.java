@@ -25,4 +25,6 @@ public interface UsuariosRepository extends JpaRepository<Usuarios, String> {
 
     // Buscar usuarios por nombre de cargo
     List<Usuarios> findByCargoDeUsuario_NombreCargo(String nombreCargo);
+
+
 }

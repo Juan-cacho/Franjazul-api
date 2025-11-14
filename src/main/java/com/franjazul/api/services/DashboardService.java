@@ -44,12 +44,12 @@ public class DashboardService {
         return dashboardRepository.obtenerCertificadosPorVencer(diasAdelante);
     }
 
-    // NUEVO: Obtener indicadores de cumplimiento
+
     public List<IndicadorCumplimientoDTO> obtenerIndicadoresCumplimiento() {
         return dashboardRepository.obtenerIndicadoresCumplimiento();
     }
 
-    // NUEVO: Obtener próximas citas
+
     public List<ProximaCitaDTO> obtenerProximasCitas(Integer cantidad) {
         if (cantidad != null && cantidad < 1) {
             throw new RuntimeException("La cantidad debe ser mayor a 0");

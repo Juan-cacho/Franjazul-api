@@ -1,14 +1,11 @@
 package com.franjazul.api.services;
 
-import com.franjazul.api.model.Citas;
-import com.franjazul.api.model.Usuarios;
-import com.franjazul.api.model.EstadoCita;
-import com.franjazul.api.model.FranjasHorarias;
-import com.franjazul.api.model.Lugares;
-import com.franjazul.api.repository.CitasRepository;
-import com.franjazul.api.repository.UsuariosRepository;
+import com.franjazul.api.dto.SolicitudCitaRequest;
+import com.franjazul.api.model.*;
+import com.franjazul.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,13 +17,31 @@ public class CitasService {
     private CitasRepository citasRepository;
 
     @Autowired
+    private CitaServicioRepository citaServicioRepository;
+
+    @Autowired
+    private ServiciosRepository serviciosRepository;
+
+    @Autowired
     private UsuariosRepository usuariosRepository;
+
+    @Autowired
+    private TipoLugarRepository tipoLugarRepository;
 
     @Autowired
     private EstadoCitaService estadoCitaService;
 
     @Autowired
+    private EstadoCitaRepository estadoCitaRepository;
+
+    @Autowired
     private FranjasHorariasService franjasHorariasService;
+
+    @Autowired
+    private FranjasHorariasRepository franjasHorariasRepository;
+
+    @Autowired
+    private LugaresRepository lugaresRepository;
 
     @Autowired
     private LugaresService lugaresService;
@@ -230,4 +245,144 @@ public class CitasService {
         }
         return citasRepository.findByFranjaHoraria(franjaOpt.get());
     }
+
+
+    @Transactional
+    public Citas solicitarCita(SolicitudCitaRequest request) {
+        // 1. Validar que el usuario cliente existe
+        Usuarios cliente = usuariosRepository.findById(request.getIdUsuarioCliente())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        if (!"CLIENTE".equalsIgnoreCase(cliente.getCargoDeUsuario().getNombreCargo())) {
+            throw new RuntimeException("El usuario debe ser un CLIENTE");
+        }
+
+        // 2. Validar que los servicios existen
+        if (request.getServiciosIds() == null || request.getServiciosIds().isEmpty()) {
+            throw new RuntimeException("Debe seleccionar al menos un servicio");
+        }
+
+        // 3. Obtener técnico por rotación
+        Usuarios tecnico = obtenerSiguienteTecnico();
+
+        // 4. Buscar o crear franja horaria
+        FranjasHorarias franja = obtenerOCrearFranja(
+                request.getFechaInicio(),
+                request.getFechaFin()
+        );
+
+        // 5. Crear o buscar lugar
+        Lugares lugar = crearLugar(
+                request.getNombreLugar(),
+                request.getDireccionLugar(),
+                request.getIdTipoLugar(),
+                request.getIdLugarPadre()
+        );
+
+        // 6. Obtener estado PENDIENTE
+        EstadoCita estadoPendiente = estadoCitaRepository.findById("PENDIENTE")
+                .orElseThrow(() -> new RuntimeException("Estado PENDIENTE no encontrado"));
+
+        // 7. Crear la cita
+        Citas nuevaCita = new Citas();
+        nuevaCita.setObservacionesCita(" "); // Espacio en blanco por defecto
+        nuevaCita.setUsuarioTecnico(tecnico);
+        nuevaCita.setUsuarioCreo(cliente);
+        nuevaCita.setFranjaHoraria(franja);
+        nuevaCita.setLugar(lugar);
+        nuevaCita.setEstadoCita(estadoPendiente);
+
+        Citas citaGuardada = citasRepository.save(nuevaCita);
+
+        // 8. Crear relaciones CitaServicio
+        for (Integer servicioId : request.getServiciosIds()) {
+            Servicios servicio = serviciosRepository.findById(servicioId)
+                    .orElseThrow(() -> new RuntimeException("Servicio no encontrado: " + servicioId));
+
+            CitaServicio citaServicio = new CitaServicio();
+            citaServicio.setCitaEnIntermedio(citaGuardada.getIdCita());
+            citaServicio.setServicioEnIntermedio(servicioId);
+            citaServicio.setCantidadSer(1); // Por defecto 1
+
+            citaServicioRepository.save(citaServicio);
+        }
+
+        return citaGuardada;
+    }
+
+    private Usuarios obtenerSiguienteTecnico() {
+        // Buscar todos los técnicos
+        List<Usuarios> tecnicos = usuariosRepository.findByCargoDeUsuario_NombreCargo("TECNICO");
+
+        if (tecnicos.isEmpty()) {
+            throw new RuntimeException("No hay técnicos disponibles");
+        }
+
+        // Obtener la última cita para saber qué técnico le toca
+        Optional<Citas> ultimaCita = citasRepository.findLastCita();
+
+        if (!ultimaCita.isPresent()) {
+            // Si no hay citas, asignar al primer técnico
+            return tecnicos.get(0);
+        }
+
+        // Buscar el índice del técnico de la última cita
+        String idUltimoTecnico = ultimaCita.get().getUsuarioTecnico().getIdUsuario();
+        int indexUltimoTecnico = -1;
+
+        for (int i = 0; i < tecnicos.size(); i++) {
+            if (tecnicos.get(i).getIdUsuario().equals(idUltimoTecnico)) {
+                indexUltimoTecnico = i;
+                break;
+            }
+        }
+
+        // Asignar al siguiente técnico (rotación circular)
+        int indexSiguienteTecnico = (indexUltimoTecnico + 1) % tecnicos.size();
+        return tecnicos.get(indexSiguienteTecnico);
+    }
+
+    private FranjasHorarias obtenerOCrearFranja(
+            java.time.LocalDateTime fechaInicio,
+            java.time.LocalDateTime fechaFin
+    ) {
+        // Buscar si ya existe la franja
+        Optional<FranjasHorarias> franjaExistente = franjasHorariasRepository
+                .findByFechaInicioAndFechaFin(fechaInicio, fechaFin);
+
+        if (franjaExistente.isPresent()) {
+            return franjaExistente.get();
+        }
+
+        // Si no existe, crear nueva franja
+        FranjasHorarias nuevaFranja = new FranjasHorarias();
+        nuevaFranja.setFechaInicio(fechaInicio);
+        nuevaFranja.setFechaFin(fechaFin);
+
+        return franjasHorariasRepository.save(nuevaFranja);
+    }
+
+    private Lugares crearLugar(
+            String nombreLugar,
+            String direccionLugar,
+            Integer idTipoLugar,
+            Integer idLugarPadre
+    ) {
+        TipoLugar tipoLugar = tipoLugarRepository.findById(idTipoLugar)
+                .orElseThrow(() -> new RuntimeException("Tipo de lugar no encontrado"));
+
+        Lugares nuevoLugar = new Lugares();
+        nuevoLugar.setNombreLugar(nombreLugar);
+        nuevoLugar.setDireccionLugar(direccionLugar);
+        nuevoLugar.setTipoLugar(tipoLugar);
+
+        if (idLugarPadre != null) {
+            Lugares lugarPadre = lugaresRepository.findById(idLugarPadre)
+                    .orElseThrow(() -> new RuntimeException("Lugar padre no encontrado"));
+            nuevoLugar.setLugarPadre(lugarPadre);
+        }
+
+        return lugaresRepository.save(nuevoLugar);
+    }
+
 }

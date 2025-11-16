@@ -1,7 +1,9 @@
 package com.franjazul.api.services;
 
+import com.franjazul.api.dto.CambioPasswordRequest;
 import com.franjazul.api.dto.LoginRequest;
 import com.franjazul.api.dto.LoginResponse;
+import com.franjazul.api.dto.RegistroRequest;
 import com.franjazul.api.model.Usuarios;
 import com.franjazul.api.model.Perfiles;
 import com.franjazul.api.model.Cargos;
@@ -10,6 +12,7 @@ import com.franjazul.api.repository.PerfilesRepository;
 import com.franjazul.api.repository.CargosRepository;
 import com.franjazul.api.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +32,9 @@ public class UsuarioService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public Optional<Usuarios> obtenerPorId(String id) {
         return usuarioRepository.findById(id);
@@ -72,6 +78,8 @@ public class UsuarioService {
             throw new RuntimeException("El cargo especificado no existe");
         }
 
+        usuario.setPasswordUs(passwordEncoder.encode(usuario.getPasswordUs()));
+
         return usuarioRepository.save(usuario);
     }
 
@@ -100,7 +108,7 @@ public class UsuarioService {
             usuarioExistente.setEmailUs(usuarioActualizado.getEmailUs());
         }
         if (usuarioActualizado.getPasswordUs() != null) {
-            usuarioExistente.setPasswordUs(usuarioActualizado.getPasswordUs());
+            usuarioExistente.setPasswordUs(passwordEncoder.encode(usuarioActualizado.getPasswordUs()));
         }
         if (usuarioActualizado.getTelefonoUs() != null) {
             String telefonoStr = String.valueOf(usuarioActualizado.getTelefonoUs());
@@ -150,16 +158,17 @@ public class UsuarioService {
             throw new RuntimeException("Debe proporcionar una contraseña");
         }
 
-        Optional<Usuarios> usuarioOptional = usuarioRepository.findByEmailAndPassword(
-                loginRequest.getEmail(),
-                loginRequest.getPassword()
-        );
+        Optional<Usuarios> usuarioOptional = usuarioRepository.findByEmailUs(loginRequest.getEmail());
 
         if (!usuarioOptional.isPresent()) {
             throw new RuntimeException("Credenciales inválidas");
         }
 
         Usuarios usuario = usuarioOptional.get();
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPasswordUs())) {
+            throw new RuntimeException("Credenciales inválidas");
+        }
 
         String nombreCompleto = usuario.getNombreUs() + " " + usuario.getApellidoUs();
         if (usuario.getApellido2Us() != null && !usuario.getApellido2Us().trim().isEmpty()) {
@@ -183,6 +192,65 @@ public class UsuarioService {
 
         return response;
     }
+
+    public LoginResponse registrar(RegistroRequest registroRequest) {
+        if (usuarioRepository.existsById(registroRequest.getIdUsuario())) {
+            throw new RuntimeException("Ya existe un usuario con ese ID");
+        }
+
+        if (usuarioRepository.existsByEmailUs(registroRequest.getEmailUs())) {
+            throw new RuntimeException("Ya existe un usuario con ese email");
+        }
+
+        if (!registroRequest.getEmailUs().contains("@")) {
+            throw new RuntimeException("El email debe contener @");
+        }
+
+        String telefonoStr = String.valueOf(registroRequest.getTelefonoUs());
+        if (telefonoStr.length() != 10) {
+            throw new RuntimeException("El teléfono debe tener exactamente 10 dígitos");
+        }
+
+        Optional<Perfiles> perfilCliente = perfilRepository.findById(3);
+        if (!perfilCliente.isPresent()) {
+            throw new RuntimeException("No se encontró el perfil de CLIENTE");
+        }
+
+        Optional<Cargos> cargoCliente = cargoRepository.findById("CLIENTE");
+        if (!cargoCliente.isPresent()) {
+            throw new RuntimeException("No se encontró el cargo de CLIENTE");
+        }
+
+        Usuarios nuevoUsuario = new Usuarios();
+        nuevoUsuario.setIdUsuario(registroRequest.getIdUsuario());
+        nuevoUsuario.setNombreUs(registroRequest.getNombreUs());
+        nuevoUsuario.setApellidoUs(registroRequest.getApellidoUs());
+        nuevoUsuario.setApellido2Us(registroRequest.getApellido2Us());
+        nuevoUsuario.setEmailUs(registroRequest.getEmailUs());
+        nuevoUsuario.setPasswordUs(passwordEncoder.encode(registroRequest.getPasswordUs()));
+        nuevoUsuario.setTelefonoUs(registroRequest.getTelefonoUs());
+        nuevoUsuario.setPerfilDeUsuario(perfilCliente.get());
+        nuevoUsuario.setCargoDeUsuario(cargoCliente.get());
+
+        usuarioRepository.save(nuevoUsuario);
+
+        return login(new LoginRequest(registroRequest.getEmailUs(), registroRequest.getPasswordUs()));
+    }
+
+    public boolean cambiarPassword(CambioPasswordRequest cambioRequest) {
+        Optional<Usuarios> usuarioOptional = usuarioRepository.findByEmailUs(cambioRequest.getEmail());
+
+        if (!usuarioOptional.isPresent()) {
+            throw new RuntimeException("No se encontró un usuario con ese email");
+        }
+
+        Usuarios usuario = usuarioOptional.get();
+        usuario.setPasswordUs(passwordEncoder.encode(cambioRequest.getPasswordNueva()));
+        usuarioRepository.save(usuario);
+
+        return true;
+    }
+
 
     public List<Usuarios> obtenerPorCargo(String nombreCargo) {
         return usuarioRepository.findByCargoDeUsuario_NombreCargo(nombreCargo);

@@ -6,9 +6,11 @@ import com.franjazul.api.model.EstadoCita;
 import com.franjazul.api.model.FranjasHorarias;
 import com.franjazul.api.model.Lugares;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CitasRepository extends JpaRepository<Citas, Integer> {
@@ -27,4 +29,7 @@ public interface CitasRepository extends JpaRepository<Citas, Integer> {
 
     // Buscar citas por lugar
     List<Citas> findByLugar(Lugares lugar);
+
+    @Query("SELECT c FROM Citas c ORDER BY c.idCita DESC")
+    Optional<Citas> findLastCita();
 }

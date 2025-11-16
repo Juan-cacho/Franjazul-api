@@ -1,7 +1,9 @@
 package com.franjazul.api.controller;
 
+import com.franjazul.api.dto.CambioPasswordRequest;
 import com.franjazul.api.dto.LoginRequest;
 import com.franjazul.api.dto.LoginResponse;
+import com.franjazul.api.dto.RegistroRequest;
 import com.franjazul.api.model.Usuarios;
 import com.franjazul.api.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -173,6 +175,52 @@ public class UsuariosController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al procesar login: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    //post /api/usuarios/registrar
+    @PostMapping("/registrar")
+    public ResponseEntity<Map<String, Object>> registrar(@RequestBody RegistroRequest registroRequest) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            LoginResponse loginResponse = usuarioService.registrar(registroRequest);
+            response.put("success", true);
+            response.put("data", loginResponse);
+            response.put("message", "Usuario registrado exitosamente");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al registrar usuario: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/cambiar-password")
+    public ResponseEntity<Map<String, Object>> cambiarPassword(@RequestBody CambioPasswordRequest cambioRequest) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean cambiado = usuarioService.cambiarPassword(cambioRequest);
+            if (cambiado) {
+                response.put("success", true);
+                response.put("message", "Contraseña cambiada exitosamente");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "No se pudo cambiar la contraseña");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al cambiar contraseña: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

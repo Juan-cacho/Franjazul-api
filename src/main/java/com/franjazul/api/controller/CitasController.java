@@ -1,5 +1,6 @@
 package com.franjazul.api.controller;
 
+import com.franjazul.api.dto.SolicitudCitaRequest;
 import com.franjazul.api.model.Citas;
 import com.franjazul.api.services.CitasService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +85,27 @@ public class CitasController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @PostMapping("/solicitar")
+    public ResponseEntity<Map<String, Object>> solicitarCita(@RequestBody SolicitudCitaRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Citas citaCreada = citasService.solicitarCita(request);
+            response.put("success", true);
+            response.put("data", citaCreada);
+            response.put("message", "Cita solicitada exitosamente");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al solicitar cita: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
     // PATCH /api/citas/{id} - Actualizar una cita
     @PatchMapping("/{id}")

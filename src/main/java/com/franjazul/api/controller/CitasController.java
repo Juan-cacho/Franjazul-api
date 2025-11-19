@@ -1,9 +1,12 @@
 package com.franjazul.api.controller;
 
+import com.franjazul.api.dto.ActualizarCitaRequest;
+import com.franjazul.api.dto.MisCitaDetalleDTO;
 import com.franjazul.api.dto.SolicitudCitaRequest;
 import com.franjazul.api.model.Citas;
 import com.franjazul.api.services.CitasService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -266,4 +269,124 @@ public class CitasController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+
+
+
+
+
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //>>>>>>>>Logica para el FILTRADO del TECNICO<<<<<<<<<<<<<<<
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+
+
+
+
+    @GetMapping("/tecnico/{idTecnico}")
+    public ResponseEntity<Map<String, Object>> obtenerCitasPorTecnico(
+            @PathVariable String idTecnico,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Page<MisCitaDetalleDTO> citas = citasService.obtenerCitasPorTecnico(idTecnico, page, size);
+            response.put("success", true);
+            response.put("data", citas.getContent());
+            response.put("currentPage", citas.getNumber());
+            response.put("totalPages", citas.getTotalPages());
+            response.put("totalElements", citas.getTotalElements());
+            response.put("message", "Citas obtenidas exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al obtener citas: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/tecnico/{idTecnico}/buscar")
+    public ResponseEntity<Map<String, Object>> buscarCitasPorCliente(
+            @PathVariable String idTecnico,
+            @RequestParam String busqueda,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Page<MisCitaDetalleDTO> citas = citasService.buscarCitasPorTecnicoYCliente(idTecnico, busqueda, page, size);
+            response.put("success", true);
+            response.put("data", citas.getContent());
+            response.put("currentPage", citas.getNumber());
+            response.put("totalPages", citas.getTotalPages());
+            response.put("totalElements", citas.getTotalElements());
+            response.put("message", "Búsqueda realizada exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error en la búsqueda: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+
+
+
+
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //>>>>>>Endpoints para el TECNICO actualizar la cita<<<<<<<<<<<
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+
+
+    @GetMapping("/{id}/detalle")
+    public ResponseEntity<Map<String, Object>> obtenerDetalleCita(@PathVariable Integer id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            MisCitaDetalleDTO cita = citasService.obtenerDetalleCita(id);
+            response.put("success", true);
+            response.put("data", cita);
+            response.put("message", "Detalle de cita obtenido exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al obtener detalle: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PatchMapping("/actualizar-tecnico")
+    public ResponseEntity<Map<String, Object>> actualizarCitaTecnico(@RequestBody ActualizarCitaRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            MisCitaDetalleDTO citaActualizada = citasService.actualizarCitaTecnico(request);
+            response.put("success", true);
+            response.put("data", citaActualizada);
+            response.put("message", "Cita actualizada exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al actualizar cita: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+
 }

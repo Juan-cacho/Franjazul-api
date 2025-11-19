@@ -1,14 +1,21 @@
 package com.franjazul.api.services;
 
+import com.franjazul.api.dto.ActualizarCitaRequest;
+import com.franjazul.api.dto.MisCitaDetalleDTO;
 import com.franjazul.api.dto.SolicitudCitaRequest;
 import com.franjazul.api.model.*;
 import com.franjazul.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CitasService {
@@ -247,8 +254,24 @@ public class CitasService {
     }
 
 
+
+
+
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //>>>>>>>>>Logica para el CLIENTE Pedir una cita<<<<<<<<<<<<
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+
+
+
+
     @Transactional
     public Citas solicitarCita(SolicitudCitaRequest request) {
+        System.out.println("Empezo");
         // 1. Validar que el usuario cliente existe
         Usuarios cliente = usuariosRepository.findById(request.getIdUsuarioCliente())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
@@ -257,20 +280,24 @@ public class CitasService {
             throw new RuntimeException("El usuario debe ser un CLIENTE");
         }
 
+        System.out.println("Llego al primer punto");
         // 2. Validar que los servicios existen
         if (request.getServiciosIds() == null || request.getServiciosIds().isEmpty()) {
             throw new RuntimeException("Debe seleccionar al menos un servicio");
         }
 
+        System.out.println("Llego al punto 2");
         // 3. Obtener técnico por rotación
         Usuarios tecnico = obtenerSiguienteTecnico();
 
+        System.out.println("Llego al punto 3");
         // 4. Buscar o crear franja horaria
         FranjasHorarias franja = obtenerOCrearFranja(
                 request.getFechaInicio(),
                 request.getFechaFin()
         );
 
+        System.out.println("Llego al punto 4");
         // 5. Crear o buscar lugar
         Lugares lugar = crearLugar(
                 request.getNombreLugar(),
@@ -279,10 +306,12 @@ public class CitasService {
                 request.getIdLugarPadre()
         );
 
+        System.out.println("Llego al punto 5");
         // 6. Obtener estado PENDIENTE
         EstadoCita estadoPendiente = estadoCitaRepository.findById("PENDIENTE")
                 .orElseThrow(() -> new RuntimeException("Estado PENDIENTE no encontrado"));
 
+        System.out.println("Llego al punto 6");
         // 7. Crear la cita
         Citas nuevaCita = new Citas();
         nuevaCita.setObservacionesCita(" "); // Espacio en blanco por defecto
@@ -294,6 +323,7 @@ public class CitasService {
 
         Citas citaGuardada = citasRepository.save(nuevaCita);
 
+        System.out.println("Llego al punto 7");
         // 8. Crear relaciones CitaServicio
         for (Integer servicioId : request.getServiciosIds()) {
             Servicios servicio = serviciosRepository.findById(servicioId)
@@ -310,22 +340,24 @@ public class CitasService {
         return citaGuardada;
     }
 
+
     private Usuarios obtenerSiguienteTecnico() {
+        System.out.println("Entro a buscar los tecnicos");
         // Buscar todos los técnicos
         List<Usuarios> tecnicos = usuariosRepository.findByCargoDeUsuario_NombreCargo("TECNICO");
 
         if (tecnicos.isEmpty()) {
             throw new RuntimeException("No hay técnicos disponibles");
         }
-
+        System.out.println("Va a buscar la ultima cita");
         // Obtener la última cita para saber qué técnico le toca
-        Optional<Citas> ultimaCita = citasRepository.findLastCita();
+        Optional<Citas> ultimaCita = citasRepository.findFirstByOrderByIdCitaDesc();
 
         if (!ultimaCita.isPresent()) {
             // Si no hay citas, asignar al primer técnico
             return tecnicos.get(0);
         }
-
+        System.out.println("Va a buscar el ultimo ID de Tecnico");
         // Buscar el índice del técnico de la última cita
         String idUltimoTecnico = ultimaCita.get().getUsuarioTecnico().getIdUsuario();
         int indexUltimoTecnico = -1;
@@ -336,10 +368,11 @@ public class CitasService {
                 break;
             }
         }
-
+        System.out.println("Asigno al tecnico");
         // Asignar al siguiente técnico (rotación circular)
         int indexSiguienteTecnico = (indexUltimoTecnico + 1) % tecnicos.size();
         return tecnicos.get(indexSiguienteTecnico);
+
     }
 
     private FranjasHorarias obtenerOCrearFranja(
@@ -383,6 +416,147 @@ public class CitasService {
         }
 
         return lugaresRepository.save(nuevoLugar);
+    }
+
+
+
+
+
+
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //>>>>>>Logica para el TECNICO actualizar la cita<<<<<<<<<<<
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+
+
+
+
+    public Page<MisCitaDetalleDTO> obtenerCitasPorTecnico(String idTecnico, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Citas> citas = citasRepository.findByUsuarioTecnicoOrderByFecha(idTecnico, pageable);
+        return citas.map(this::convertirAMisCitaDetalleDTO);
+    }
+
+    public Page<MisCitaDetalleDTO> buscarCitasPorTecnicoYCliente(String idTecnico, String busqueda, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Citas> citas = citasRepository.findByUsuarioTecnicoAndClienteContaining(idTecnico, busqueda, pageable);
+        return citas.map(this::convertirAMisCitaDetalleDTO);
+    }
+
+    private MisCitaDetalleDTO convertirAMisCitaDetalleDTO(Citas cita) {
+        String nombreCliente = cita.getUsuarioCreo().getNombreUs() + " " +
+                cita.getUsuarioCreo().getApellidoUs();
+        if (cita.getUsuarioCreo().getApellido2Us() != null &&
+                !cita.getUsuarioCreo().getApellido2Us().trim().isEmpty()) {
+            nombreCliente += " " + cita.getUsuarioCreo().getApellido2Us();
+        }
+
+        String nombreTecnico = cita.getUsuarioTecnico().getNombreUs() + " " +
+                cita.getUsuarioTecnico().getApellidoUs();
+
+        List<CitaServicio> citaServicios = citaServicioRepository.findByCitaEnIntermedio(cita.getIdCita());
+        List<String> servicios = citaServicios.stream()
+                .map(cs -> cs.getServicio().getNombreSer())
+                .collect(Collectors.toList());
+
+        return new MisCitaDetalleDTO(
+                cita.getIdCita(),
+                cita.getObservacionesCita(),
+                nombreCliente,
+                cita.getUsuarioCreo().getIdUsuario(),
+                nombreTecnico,
+                cita.getUsuarioTecnico().getIdUsuario(),
+                cita.getFranjaHoraria().getFechaInicio(),
+                cita.getFranjaHoraria().getFechaFin(),
+                cita.getLugar().getNombreLugar(),
+                cita.getLugar().getDireccionLugar(),
+                cita.getEstadoCita().getNombreEc(),
+                cita.getEstadoCita().getDescripcionEc(),
+                servicios
+        );
+    }
+
+
+    public MisCitaDetalleDTO obtenerDetalleCita(Integer idCita) {
+        Citas cita = citasRepository.findById(idCita)
+                .orElseThrow(() -> new RuntimeException("Cita no encontrada"));
+
+        return convertirAMisCitaDetalleDTO(cita);
+    }
+
+    @Transactional
+    public MisCitaDetalleDTO actualizarCitaTecnico(ActualizarCitaRequest request) {
+        Citas cita = citasRepository.findById(request.getIdCita())
+                .orElseThrow(() -> new RuntimeException("Cita no encontrada"));
+
+        boolean cambioFranja = false;
+
+        // Actualizar observaciones si se proporcionan
+        if (request.getObservacionesCita() != null) {
+            cita.setObservacionesCita(request.getObservacionesCita());
+        }
+
+        // Validar y actualizar franja horaria si cambió
+        if (request.getFechaInicio() != null && request.getFechaFin() != null) {
+            LocalDateTime franjaActualInicio = cita.getFranjaHoraria().getFechaInicio();
+            LocalDateTime franjaActualFin = cita.getFranjaHoraria().getFechaFin();
+
+            if (!franjaActualInicio.equals(request.getFechaInicio()) ||
+                    !franjaActualFin.equals(request.getFechaFin())) {
+
+                cambioFranja = true;
+
+                // Validar que el técnico no tenga otra cita en esa franja
+                long citasEnFranja = citasRepository.countByTecnicoAndFranjaExcluyendoCita(
+                        cita.getUsuarioTecnico().getIdUsuario(),
+                        request.getFechaInicio(),
+                        request.getFechaFin(),
+                        cita.getIdCita()
+                );
+
+                if (citasEnFranja > 0) {
+                    throw new RuntimeException("Ya tienes otra cita programada en esa franja horaria");
+                }
+
+                // Buscar o crear nueva franja
+                FranjasHorarias nuevaFranja = obtenerOCrearFranja(
+                        request.getFechaInicio(),
+                        request.getFechaFin()
+                );
+                cita.setFranjaHoraria(nuevaFranja);
+
+                // Cambiar estado a REAGENDADA automáticamente
+                EstadoCita estadoReagendada = estadoCitaRepository.findById("REAGENDADA")
+                        .orElseThrow(() -> new RuntimeException("Estado REAGENDADA no encontrado"));
+                cita.setEstadoCita(estadoReagendada);
+            }
+        }
+
+        // Actualizar estado solo si no se cambió la franja
+        if (!cambioFranja && request.getEstadoCita() != null) {
+            if ("REAGENDADA".equalsIgnoreCase(request.getEstadoCita())) {
+                throw new RuntimeException("No puedes cambiar manualmente el estado a REAGENDADA");
+            }
+
+            EstadoCita nuevoEstado = estadoCitaRepository.findById(request.getEstadoCita())
+                    .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
+            cita.setEstadoCita(nuevoEstado);
+        }
+
+        Citas citaActualizada = citasRepository.save(cita);
+        return convertirAMisCitaDetalleDTO(citaActualizada);
+    }
+
+    public List<EstadoCita> obtenerEstadosDisponibles() {
+        List<EstadoCita> todosEstados = estadoCitaRepository.findAll();
+        // Filtrar REAGENDADA
+        return todosEstados.stream()
+                .filter(estado -> !"REAGENDADA".equalsIgnoreCase(estado.getNombreEc()))
+                .collect(Collectors.toList());
     }
 
 }

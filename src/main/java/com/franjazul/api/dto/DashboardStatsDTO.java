@@ -106,4 +106,5 @@ public class DashboardStatsDTO {
     public void setServiciosActivos(Long serviciosActivos) {
         this.serviciosActivos = serviciosActivos;
     }
+
 }

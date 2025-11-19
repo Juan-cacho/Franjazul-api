@@ -11,7 +11,7 @@ import java.util.List;
 public interface CitaServicioRepository extends JpaRepository<CitaServicio, CitaServicioId> {
 
     // Buscar todos los servicios de una cita
-    List<CitaServicio> findByCitaEnIntermedio(Integer citaId);
+    List<CitaServicio> findByCitaEnIntermedio(Integer citaEnIntermedio);
 
     // Buscar todas las citas que tienen un servicio
     List<CitaServicio> findByServicioEnIntermedio(Integer servicioId);

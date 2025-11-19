@@ -1,6 +1,7 @@
 package com.franjazul.api.controller;
 
 import com.franjazul.api.model.EstadoCita;
+import com.franjazul.api.services.CitasService;
 import com.franjazul.api.services.EstadoCitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,9 @@ public class EstadoCitaController {
 
     @Autowired
     private EstadoCitaService estadoCitaService;
+
+    @Autowired
+    private CitasService citasService;
 
     // GET /api/estados-cita - Obtener todos los estados de cita
     @GetMapping
@@ -134,4 +138,37 @@ public class EstadoCitaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+
+
+
+
+
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //>>>>>>Endpoints para Mostrar los estados al TECNICO<<<<<<<<<<
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+
+
+
+    @GetMapping("/disponibles")
+    public ResponseEntity<Map<String, Object>> obtenerEstadosDisponibles() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<EstadoCita> estados = citasService.obtenerEstadosDisponibles();
+            response.put("success", true);
+            response.put("data", estados);
+            response.put("message", "Estados obtenidos exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al obtener estados: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }

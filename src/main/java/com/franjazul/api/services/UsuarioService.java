@@ -36,6 +36,9 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // contraseña por defecto para la creacion de usuarios desde la tabla o postman
+    private static final String PASSWORD_POR_DEFECTO = "franjazul123";
+
     public Optional<Usuarios> obtenerPorId(String id) {
         return usuarioRepository.findById(id);
     }
@@ -78,7 +81,17 @@ public class UsuarioService {
             throw new RuntimeException("El cargo especificado no existe");
         }
 
-        usuario.setPasswordUs(passwordEncoder.encode(usuario.getPasswordUs()));
+        // MANEJO DE LA CONTRASEÑA POR DEFECTO
+        if (usuario.getPasswordUs() == null || usuario.getPasswordUs().trim().isEmpty()) {
+            // Si no se envía contraseña, usar la predeterminada
+            usuario.setPasswordUs(passwordEncoder.encode(PASSWORD_POR_DEFECTO));
+        } else if (usuario.getPasswordUs().equals(PASSWORD_POR_DEFECTO)) {
+            // Si se envía explícitamente "franjazul123", encriptarla
+            usuario.setPasswordUs(passwordEncoder.encode(PASSWORD_POR_DEFECTO));
+        } else {
+            // Si se envía otra contraseña, encriptarla
+            usuario.setPasswordUs(passwordEncoder.encode(usuario.getPasswordUs()));
+        }
 
         return usuarioRepository.save(usuario);
     }
@@ -107,9 +120,11 @@ public class UsuarioService {
             }
             usuarioExistente.setEmailUs(usuarioActualizado.getEmailUs());
         }
-        if (usuarioActualizado.getPasswordUs() != null) {
-            usuarioExistente.setPasswordUs(passwordEncoder.encode(usuarioActualizado.getPasswordUs()));
-        }
+
+        // NO ACTUALIZAR LA CONTRASEÑA EN MODO EDICIÓN
+        // La contraseña solo se cambia desde el endpoint /cambiar-password
+        // Si se envía passwordUs en el PATCH, se ignora (por seguridad)
+
         if (usuarioActualizado.getTelefonoUs() != null) {
             String telefonoStr = String.valueOf(usuarioActualizado.getTelefonoUs());
             if (telefonoStr.length() != 10) {
@@ -250,7 +265,6 @@ public class UsuarioService {
 
         return true;
     }
-
 
     public List<Usuarios> obtenerPorCargo(String nombreCargo) {
         return usuarioRepository.findByCargoDeUsuario_NombreCargo(nombreCargo);

@@ -1,9 +1,13 @@
 package com.franjazul.api.controller;
 
+import com.franjazul.api.dto.SolicitudCertificadoDTO;
 import com.franjazul.api.model.Certificados;
 import com.franjazul.api.services.CertificadosService;
+import com.franjazul.api.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +23,9 @@ public class CertificadosController {
 
     @Autowired
     private CertificadosService certificadosService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // GET /api/certificados - Obtener todos los certificados
     @GetMapping
@@ -192,4 +199,54 @@ public class CertificadosController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+
+
+
+
+
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //>>>>>>>>>>>>>>Endpoint Solicitar Certificado<<<<<<<<<<<<<<<
+    //>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+
+    @PostMapping("/generar")
+    public ResponseEntity<?> generarCertificado(@RequestBody SolicitudCertificadoDTO solicitud,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Extraer el token del header (formato: "Bearer TOKEN")
+            String token = authHeader.replace("Bearer ", "");
+
+            // Validar el token
+            if (!jwtUtil.validateToken(token)) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Token inválido o expirado");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+
+            // Generar el PDF
+            byte[] pdfBytes = certificadosService.generarCertificadoPDF(solicitud, token);
+
+            // Configurar headers para descarga
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "certificado_franjazul.pdf");
+            headers.setContentLength(pdfBytes.length);
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+
 }

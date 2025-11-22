@@ -79,11 +79,15 @@ public class CitasController {
             response.put("message", "Cita creada exitosamente");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
+            // Errores de validación (BAD_REQUEST)
             response.put("success", false);
+            response.put("data", null);
             response.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("success", false);
+            response.put("data", null);
             response.put("message", "Error al crear cita: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }

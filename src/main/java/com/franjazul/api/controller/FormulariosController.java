@@ -7,8 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/formularios")
@@ -19,11 +19,11 @@ public class FormulariosController {
     private FormulariosService formularioService;
 
     private ResponseEntity<Map<String, Object>> response(HttpStatus status, boolean success, String message, Object data) {
-        return ResponseEntity.status(status).body(Map.of(
-                "success", success,
-                "message", message,
-                "data", data
-        ));
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", success);
+        body.put("message", message);
+        body.put("data", data); // Ahora sí permite null
+        return ResponseEntity.status(status).body(body);
     }
 
     private ResponseEntity<Map<String, Object>> response(HttpStatus status, boolean success, String message) {

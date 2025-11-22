@@ -63,72 +63,71 @@ public class CitasService {
         return citasRepository.findAll();
     }
 
-    // Crear una nueva cita
+
+
+
     public Citas crear(Citas cita) {
-
-        cita.setIdCita(null);
-        // Validar que el ID no exista
-        if (citasRepository.existsById(cita.getIdCita())) {
-            throw new RuntimeException("Ya existe una cita con el ID: " + cita.getIdCita());
-        }
-
-        // Validar que el usuario técnico exista (obligatorio)
+        // Validar y cargar Usuario Técnico
         if (cita.getUsuarioTecnico() == null || cita.getUsuarioTecnico().getIdUsuario() == null) {
-            throw new RuntimeException("El usuario técnico es obligatorio");
+            throw new RuntimeException("El técnico asignado es obligatorio");
         }
+        Usuarios tecnico = usuariosRepository.findById(cita.getUsuarioTecnico().getIdUsuario())
+                .orElseThrow(() -> new RuntimeException("El técnico con ID " + cita.getUsuarioTecnico().getIdUsuario() + " no existe"));
 
-        Optional<Usuarios> usuarioTecnicoOpt = usuariosRepository.findById(cita.getUsuarioTecnico().getIdUsuario());
-        if (!usuarioTecnicoOpt.isPresent()) {
-            throw new RuntimeException("El usuario técnico con ID " + cita.getUsuarioTecnico().getIdUsuario() + " no existe");
+        // Validar que el técnico tenga cargo TECNICO
+        if (!"TECNICO".equalsIgnoreCase(tecnico.getCargoDeUsuario().getNombreCargo())) {
+            throw new RuntimeException("El usuario seleccionado no es un técnico");
         }
-        cita.setUsuarioTecnico(usuarioTecnicoOpt.get());
+        cita.setUsuarioTecnico(tecnico);
 
-        // Validar que el usuario que creó la cita exista (obligatorio)
+        // Validar y cargar Usuario Cliente
         if (cita.getUsuarioCreo() == null || cita.getUsuarioCreo().getIdUsuario() == null) {
-            throw new RuntimeException("El usuario creador es obligatorio");
+            throw new RuntimeException("El cliente solicitante es obligatorio");
         }
+        Usuarios cliente = usuariosRepository.findById(cita.getUsuarioCreo().getIdUsuario())
+                .orElseThrow(() -> new RuntimeException("El cliente con ID " + cita.getUsuarioCreo().getIdUsuario() + " no existe"));
 
-        Optional<Usuarios> usuarioCreoOpt = usuariosRepository.findById(cita.getUsuarioCreo().getIdUsuario());
-        if (!usuarioCreoOpt.isPresent()) {
-            throw new RuntimeException("El usuario creador con ID " + cita.getUsuarioCreo().getIdUsuario() + " no existe");
+        // Validar que el cliente tenga cargo CLIENTE
+        if (!"CLIENTE".equalsIgnoreCase(cliente.getCargoDeUsuario().getNombreCargo())) {
+            throw new RuntimeException("El usuario seleccionado no es un cliente");
         }
-        cita.setUsuarioCreo(usuarioCreoOpt.get());
+        cita.setUsuarioCreo(cliente);
 
-        // Validar que la franja horaria exista (obligatorio)
+        // Validar y cargar Franja Horaria
         if (cita.getFranjaHoraria() == null || cita.getFranjaHoraria().getIdFranja() == null) {
             throw new RuntimeException("La franja horaria es obligatoria");
         }
+        FranjasHorarias franja = franjasHorariasRepository.findById(cita.getFranjaHoraria().getIdFranja())
+                .orElseThrow(() -> new RuntimeException("La franja horaria con ID " + cita.getFranjaHoraria().getIdFranja() + " no existe"));
+        cita.setFranjaHoraria(franja);
 
-        Optional<FranjasHorarias> franjaHorariaOpt = franjasHorariasService.obtenerPorId(cita.getFranjaHoraria().getIdFranja());
-        if (!franjaHorariaOpt.isPresent()) {
-            throw new RuntimeException("La franja horaria con ID " + cita.getFranjaHoraria().getIdFranja() + " no existe");
-        }
-        cita.setFranjaHoraria(franjaHorariaOpt.get());
-
-        // Validar que el lugar exista (obligatorio)
+        // Validar y cargar Lugar
         if (cita.getLugar() == null || cita.getLugar().getIdLugar() == null) {
             throw new RuntimeException("El lugar es obligatorio");
         }
+        Lugares lugar = lugaresRepository.findById(cita.getLugar().getIdLugar())
+                .orElseThrow(() -> new RuntimeException("El lugar con ID " + cita.getLugar().getIdLugar() + " no existe"));
+        cita.setLugar(lugar);
 
-        Optional<Lugares> lugarOpt = lugaresService.obtenerPorId(cita.getLugar().getIdLugar());
-        if (!lugarOpt.isPresent()) {
-            throw new RuntimeException("El lugar con ID " + cita.getLugar().getIdLugar() + " no existe");
-        }
-        cita.setLugar(lugarOpt.get());
-
-        // Validar que el estado de cita exista (obligatorio)
+        // Validar y cargar Estado de Cita
         if (cita.getEstadoCita() == null || cita.getEstadoCita().getNombreEc() == null) {
-            throw new RuntimeException("El estado de cita es obligatorio");
+            throw new RuntimeException("El estado de la cita es obligatorio");
+        }
+        EstadoCita estado = estadoCitaRepository.findById(cita.getEstadoCita().getNombreEc())
+                .orElseThrow(() -> new RuntimeException("El estado de cita '" + cita.getEstadoCita().getNombreEc() + "' no existe"));
+        cita.setEstadoCita(estado);
+
+        // Validar observaciones
+        if (cita.getObservacionesCita() == null) {
+            throw new RuntimeException("Las observaciones son obligatorias");
         }
 
-        Optional<EstadoCita> estadoCitaOpt = estadoCitaService.obtenerPorId(cita.getEstadoCita().getNombreEc());
-        if (!estadoCitaOpt.isPresent()) {
-            throw new RuntimeException("El estado de cita con nombre " + cita.getEstadoCita().getNombreEc() + " no existe");
-        }
-        cita.setEstadoCita(estadoCitaOpt.get());
-
+        // Guardar la cita
         return citasRepository.save(cita);
     }
+
+
+
 
     // Actualizar una cita existente
     public Citas actualizar(Integer id, Citas citaActualizada) {

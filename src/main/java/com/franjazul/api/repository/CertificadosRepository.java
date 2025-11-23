@@ -27,9 +27,10 @@ public interface CertificadosRepository extends JpaRepository<Certificados, Stri
     List<Certificados> findByFechaEmisionBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
 
-    //Query para solicitar certificado
+    //convencion JPA para encontrar el primero y para solicitar certificado mas reciente
 
-    @Query("SELECT c FROM Certificados c WHERE c.cita.usuarioCreo.idUsuario = :userId ORDER BY c.fechaEmision DESC")
-    Optional<Certificados> findUltimoCertificadoByUsuario(@Param("userId") String userId);
+    Optional<Certificados> findFirstByCita_UsuarioCreo_IdUsuarioOrderByFechaEmisionDesc(String userId);
+
+
 
 }

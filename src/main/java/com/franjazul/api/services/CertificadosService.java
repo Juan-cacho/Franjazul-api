@@ -189,7 +189,7 @@ public class CertificadosService {
         validarSolicitud(solicitud, userId);
 
         // 3. Obtener el último certificado del usuario
-        Optional<Certificados> certificadoOpt = certificadosRepository.findUltimoCertificadoByUsuario(userId);
+        Optional<Certificados> certificadoOpt = certificadosRepository.findFirstByCita_UsuarioCreo_IdUsuarioOrderByFechaEmisionDesc(userId);
 
         if (!certificadoOpt.isPresent()) {
             throw new ResponseStatusException(
@@ -359,7 +359,7 @@ public class CertificadosService {
         String tipoLugar = solicitud.getTipoDocumento().equals("CC") ? "residencia" : "Sede comercial";
 
         String textoCertificacion = String.format(
-                "Que se desarrolló desinsectación y desratización en la %s %s con %s %s, " +
+                "Que se desarrolló desinsectación y desratización en la %s %s propiedad de la entidad identificada con %s %s, " +
                         "ubicada en la dirección %s, teléfono %s, el día %s.",
                 tipoLugar,
                 cita.getLugar().getNombreLugar(),

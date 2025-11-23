@@ -374,6 +374,8 @@ public class CitasService {
 
     }
 
+
+
     private FranjasHorarias obtenerOCrearFranja(
             java.time.LocalDateTime fechaInicio,
             java.time.LocalDateTime fechaFin
@@ -394,29 +396,51 @@ public class CitasService {
         return franjasHorariasRepository.save(nuevaFranja);
     }
 
-    private Lugares crearLugar(
-            String nombreLugar,
-            String direccionLugar,
-            Integer idTipoLugar,
-            Integer idLugarPadre
-    ) {
-        TipoLugar tipoLugar = tipoLugarRepository.findById(idTipoLugar)
-                .orElseThrow(() -> new RuntimeException("Tipo de lugar no encontrado"));
 
+
+    private Lugares crearLugar(String nombreLugar, String direccionLugar, Integer idTipoLugar, Integer idLugarPadre) {
+        // 1. Convertir a lowercase para comparación
+        String nombreLugarLower = nombreLugar.trim().toLowerCase();
+        String direccionLugarLower = direccionLugar.trim().toLowerCase();
+
+        System.out.println("🔍 Buscando lugar: " + nombreLugarLower + " - " + direccionLugarLower);
+
+        // 2. Buscar lugar existente con AMBOS criterios (nombre Y dirección)
+        Optional<Lugares> lugarExistente = lugaresRepository.findByNombreLugarAndDireccionLugar(
+                nombreLugarLower,
+                direccionLugarLower
+        );
+
+        // 3. Si existe lugar con MISMO nombre Y MISMA dirección → Reutilizar
+        if (lugarExistente.isPresent()) {
+            System.out.println("✅ Lugar existente encontrado (mismo nombre y dirección), reutilizando: ID " + lugarExistente.get().getIdLugar());
+            return lugarExistente.get();
+        }
+
+        System.out.println("📝 No se encontró lugar idéntico, creando nuevo registro");
+
+        // 4. Validar tipo de lugar
+        TipoLugar tipoLugar = tipoLugarRepository.findById(idTipoLugar)
+                .orElseThrow(() -> new RuntimeException("Tipo de lugar no encontrado: " + idTipoLugar));
+
+        // 5. Crear nuevo lugar
         Lugares nuevoLugar = new Lugares();
-        nuevoLugar.setNombreLugar(nombreLugar);
-        nuevoLugar.setDireccionLugar(direccionLugar);
+        nuevoLugar.setNombreLugar(nombreLugarLower);
+        nuevoLugar.setDireccionLugar(direccionLugarLower);
         nuevoLugar.setTipoLugar(tipoLugar);
 
+        // 6. Asignar lugar padre si existe
         if (idLugarPadre != null) {
             Lugares lugarPadre = lugaresRepository.findById(idLugarPadre)
-                    .orElseThrow(() -> new RuntimeException("Lugar padre no encontrado"));
+                    .orElseThrow(() -> new RuntimeException("Lugar padre no encontrado: " + idLugarPadre));
             nuevoLugar.setLugarPadre(lugarPadre);
         }
 
-        return lugaresRepository.save(nuevoLugar);
-    }
+        Lugares lugarGuardado = lugaresRepository.save(nuevoLugar);
+        System.out.println("✅ Nuevo lugar creado con ID: " + lugarGuardado.getIdLugar());
 
+        return lugarGuardado;
+    }
 
 
 

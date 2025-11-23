@@ -19,4 +19,6 @@ public interface LugaresRepository extends JpaRepository<Lugares, Integer> {
 
     // Buscar lugares dentro de otro lugar
     List<Lugares> findByLugarPadre(Lugares lugarPadre);
+
+    Optional<Lugares> findByNombreLugarAndDireccionLugar(String nombreLugar, String direccionLugar);
 }

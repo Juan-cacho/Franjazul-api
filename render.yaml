@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: franjazul-api
+    env: java
+    region: oregon
+    plan: free
+    branch: develop
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -Dserver.port=$PORT $JAVA_OPTS -jar target/franjazul-api.jar
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_WEopOGwP0Lm2@ep-calm-term-a4kkjsla-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JWT_SECRET
+        value: franjazul_prod_secret_2025_muy_segura
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: FRONTEND_URL
+        value: http://localhost:4200
+      - key: JAVA_OPTS
+        value: -Xmx512m -Xms256m

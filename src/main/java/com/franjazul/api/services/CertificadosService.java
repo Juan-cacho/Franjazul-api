@@ -31,6 +31,8 @@ public class CertificadosService {
 
     // Crear un nuevo certificado
     public Certificados crear(Certificados certificado) {
+
+
         // Validar que el código no exista
         if (certificadosRepository.existsById(certificado.getCodigoCer())) {
             throw new RuntimeException("Ya existe un certificado con el código: " + certificado.getCodigoCer());

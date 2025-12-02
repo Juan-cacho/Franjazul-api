@@ -45,10 +45,6 @@ public class CitasService {
     public Citas crear(Citas cita) {
 
         cita.setIdCita(null);
-        // Validar que el ID no exista
-        if (citasRepository.existsById(cita.getIdCita())) {
-            throw new RuntimeException("Ya existe una cita con el ID: " + cita.getIdCita());
-        }
 
         // Validar que el usuario técnico exista (obligatorio)
         if (cita.getUsuarioTecnico() == null || cita.getUsuarioTecnico().getIdUsuario() == null) {
